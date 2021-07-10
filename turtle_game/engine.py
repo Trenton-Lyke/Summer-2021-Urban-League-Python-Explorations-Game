@@ -20,7 +20,7 @@ from turtle_game.world import World
 
 
 class Engine:
-    def __init__(self, world: World, players: List[Player], prey_per_team:int=125, predators_per_team:int=25):
+    def __init__(self, world: World, players: List[Player], prey_per_team:int=125, predators_per_team:int=25, border_proximity=10):
         self.world: World = world
         self.predator_kill_radius: int = world.predator_kill_radius()
         self.players: List[Player] = players
@@ -31,6 +31,7 @@ class Engine:
         self.game_lock: Lock = Lock()
         self.write_lock: Lock = Lock()
         self.movement_functions_dict: Dict[str, Dict[bool, Callable[[CompetitionTurtle], None]]] = {}
+        self.__border_proximity = border_proximity
         self.__start: bool = False
 
 
@@ -41,7 +42,7 @@ class Engine:
                 location = player.prey_placement_function(self.world, i)
                 location = self.location_failsafe(location, True)
                 turtle = CompetitionTurtle(player.team_name, True, player.prey_color, location[0], location[1],
-                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_goto, self.can_eat, self.predator_kill_radius)
+                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_goto, self.can_eat, self.game_over, self.is_turtle_on_left_edge, self.is_turtle_on_top_edge, self.is_turtle_on_right_edge, self.is_turtle_on_bottom_edge, self.is_turtle_in_top_left_corner, self.is_turtle_in_top_right_corner, self.is_turtle_in_bottom_right_corner, self.is_turtle_in_bottom_left_corner,9)
                 self.world.turtles.append(turtle)
                 self.world.prey.append(turtle)
 
@@ -49,7 +50,7 @@ class Engine:
                 location = player.predator_placement_function(self.world, i)
                 location = self.location_failsafe(location, False)
                 turtle = CompetitionTurtle(player.team_name, False, player.predator_color, location[0], location[1],
-                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_goto, self.can_eat, self.predator_kill_radius)
+                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_goto, self.can_eat, self.game_over, self.is_turtle_on_left_edge, self.is_turtle_on_top_edge, self.is_turtle_on_right_edge, self.is_turtle_on_bottom_edge, self.is_turtle_in_top_left_corner, self.is_turtle_in_top_right_corner, self.is_turtle_in_bottom_right_corner, self.is_turtle_in_bottom_left_corner,12)
                 self.world.turtles.append(turtle)
                 self.world.predators.append(turtle)
 
@@ -123,19 +124,20 @@ class Engine:
     def move_inbounds(self, turtle):
         x = turtle.position()[0]
         y = turtle.position()[1]
+        stayed = True
         if x > self.world.world_dimensions.max_x():
             turtle.goto(self.world.world_dimensions.max_x(), y)
-            return False
+            stayed = False
         elif x < self.world.world_dimensions.min_x():
             turtle.goto(self.world.world_dimensions.min_x(), y)
-            return False
+            stayed = False
         if y > self.world.world_dimensions.max_y():
             turtle.goto(x, self.world.world_dimensions.max_y())
-            return False
+            stayed = False
         elif y < self.world.world_dimensions.min_y():
             turtle.goto(x, self.world.world_dimensions.min_y())
-            return False
-        return True
+            stayed = False
+        return stayed
 
     def number_prey_alive(self, player: Player) -> int:
         return len(list(filter(lambda x: x.team_name() == player.team_name, self.world.prey)))
@@ -146,6 +148,22 @@ class Engine:
             count += 1 if (self.number_prey_alive(player) > 0) else 0
         return count <= 1
 
+    def is_turtle_on_left_edge(self, turtle: CompetitionTurtle) -> bool:
+        return abs(turtle.position()[0]-self.world.world_dimensions.min_x()) < self.__border_proximity
+    def is_turtle_on_top_edge(self, turtle: CompetitionTurtle) -> bool:
+        return abs(turtle.position()[1] - self.world.world_dimensions.max_y()) < self.__border_proximity
+    def is_turtle_on_right_edge(self, turtle: CompetitionTurtle) -> bool:
+        return abs(turtle.position()[0] - self.world.world_dimensions.max_x()) < self.__border_proximity
+    def is_turtle_on_bottom_edge(self, turtle: CompetitionTurtle) -> bool:
+        return abs(turtle.position()[1] - self.world.world_dimensions.min_y()) < self.__border_proximity
+    def is_turtle_in_top_left_corner(self, turtle: CompetitionTurtle) -> bool:
+        return self.is_turtle_on_left_edge(turtle) and self.is_turtle_on_top_edge(turtle)
+    def is_turtle_in_top_right_corner(self, turtle: CompetitionTurtle) -> bool:
+        return self.is_turtle_on_right_edge(turtle) and self.is_turtle_on_top_edge(turtle)
+    def is_turtle_in_bottom_right_corner(self, turtle: CompetitionTurtle) -> bool:
+        return self.is_turtle_on_right_edge(turtle) and self.is_turtle_on_bottom_edge(turtle)
+    def is_turtle_in_bottom_left_corner(self, turtle: CompetitionTurtle) -> bool:
+        return self.is_turtle_on_left_edge(turtle) and self.is_turtle_on_bottom_edge(turtle)
     def winning_player(self) -> Player:
         for player in self.players:
             if (self.number_prey_alive(player) > 0):

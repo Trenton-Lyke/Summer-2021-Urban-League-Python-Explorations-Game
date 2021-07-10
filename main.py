@@ -4,6 +4,7 @@ import os
 from queue import Queue
 from random import random, randint
 from threading import Barrier, Lock
+from turtle import Screen
 from typing import Union, Tuple, Callable
 
 from turtle_game.competition_turtle import CompetitionTurtle
@@ -56,8 +57,11 @@ def test_function_time(time: float, function: Callable, *arguments):
 
 def can_goto( turtle: CompetitionTurtle):
     return False
-def can_eat(prey: CompetitionTurtle):
+def get_bool(prey: CompetitionTurtle):
     return False if randint(0,1)==1 else True
+
+
+
 
 def failsafes(person):
     team_name: str
@@ -93,7 +97,7 @@ def failsafes(person):
     else:
         predator_placement_function = person.predator_placement_function
     test_turtle = CompetitionTurtle(team_name, True, prey_color, World().random_location()[0], World().random_location()[1],
-                                           Barrier(1), Barrier(1), Queue(), Lock(), can_goto, can_eat, 30)
+                                    Barrier(1), Barrier(1), Queue(), Lock(), can_goto, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, 12)
     test_turtle.hide()
     if not hasattr(person,"prey_movement_function") or not isinstance(person.prey_movement_function,Callable) or not test_function_time(5, person.prey_movement_function, test_turtle, World()):
         print("Prey movement function failsafe 1 triggered")
@@ -102,7 +106,7 @@ def failsafes(person):
         prey_movement_function = person.prey_movement_function
     test_turtle = CompetitionTurtle(team_name, False, predator_color, World().random_location()[0],
                                     World().random_location()[1],
-                                    Barrier(1), Barrier(1), Queue(), Lock(), can_goto, can_eat, 30)
+                                    Barrier(1), Barrier(1), Queue(), Lock(), can_goto, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, 9)
     test_turtle.hide()
     if not hasattr(person,"predator_movement_function") or not isinstance(person.predator_movement_function,Callable) or not test_function_time(5, person.predator_movement_function, test_turtle, World()):
         print("Predator movement function failsafe 1 triggered")
@@ -122,4 +126,5 @@ for file in os.listdir(turtle_programs.__path__[0]):
 
 
 winner = run_match(people)
+Screen().exitonclick()
 

@@ -13,7 +13,7 @@ from turtle_game.relative_location import RelativeLocation
 
 
 class CompetitionTurtle:
-    def __init__(self, team_name: str, is_prey: bool, color: Union[str,Tuple[float,float,float]], x: float, y: float, move_barrier: Barrier, check_barrier: Barrier,  process_queue: Queue, lock: Lock, __can_goto: Callable[[CompetitionTurtle],bool], __can_eat: Callable[[CompetitionTurtle,CompetitionTurtle],bool], predator_kill_radius: int, max_speed: float=10):
+    def __init__(self, team_name: str, is_prey: bool, color: Union[str,Tuple[float,float,float]], x: float, y: float, move_barrier: Barrier, check_barrier: Barrier,  process_queue: Queue, lock: Lock, __can_goto: Callable[[CompetitionTurtle],bool], __can_eat: Callable[[CompetitionTurtle,CompetitionTurtle],bool],  is_game_over: Callable[[],bool], is_turtle_on_left_edge: Callable[[CompetitionTurtle],bool], is_turtle_on_top_edge: Callable[[CompetitionTurtle],bool], is_turtle_on_right_edge: Callable[[CompetitionTurtle],bool], is_turtle_on_bottom_edge: Callable[[CompetitionTurtle],bool], is_turtle_in_top_left_corner: Callable[[CompetitionTurtle],bool], is_turtle_in_top_right_corner: Callable[[CompetitionTurtle],bool], is_turtle_in_bottom_right_corner: Callable[[CompetitionTurtle],bool], is_turtle_in_bottom_left_corner: Callable[[CompetitionTurtle],bool],max_speed: float):
         self.__turtle: Turtle = Turtle()
         self.__turtle.shape('turtle')
         self.__team_name: str = team_name
@@ -34,11 +34,19 @@ class CompetitionTurtle:
         self.__started: bool = False
         self.__can_goto: Callable[[CompetitionTurtle],bool] = __can_goto
         self.__can_eat: Callable[[CompetitionTurtle, CompetitionTurtle], bool] = __can_eat
-        self.predator_kill_radius = predator_kill_radius
         self.__waited = False
         self.__just_ate = False
         self.goto(x, y)
         self.__max_speed: float = max_speed
+        self.__is_game_over: Callable[[],bool] = is_game_over
+        self.__is_turtle_on_left_edge: Callable[[CompetitionTurtle],bool] = is_turtle_on_left_edge
+        self.__is_turtle_on_top_edge: Callable[[CompetitionTurtle],bool] = is_turtle_on_top_edge
+        self.__is_turtle_on_right_edge: Callable[[CompetitionTurtle],bool] = is_turtle_on_right_edge
+        self.__is_turtle_on_bottom_edge: Callable[[CompetitionTurtle],bool] = is_turtle_on_bottom_edge
+        self.__is_turtle_in_top_left_corner: Callable[[CompetitionTurtle],bool] = is_turtle_in_top_left_corner
+        self.__is_turtle_in_top_right_corner: Callable[[CompetitionTurtle],bool] = is_turtle_in_top_right_corner
+        self.__is_turtle_in_bottom_right_corner: Callable[[CompetitionTurtle],bool] = is_turtle_in_bottom_right_corner
+        self.__is_turtle_in_bottom_left_corner: Callable[[CompetitionTurtle],bool] = is_turtle_in_bottom_left_corner
 
     def start(self):
         self.__started = True
@@ -147,11 +155,23 @@ class CompetitionTurtle:
         else:
             return RelativeLocation(1,1)
 
+    def angle_to_closest_enemy_prey(self) -> float:
+        return self.closest_enemy_prey().angle()
+
+    def distance_to_closest_enemy_prey(self) -> float:
+        return self.closest_enemy_prey().distance()
+
     def closest_enemy_predator(self) -> RelativeLocation:
         if len(self.enemy_predators_relative_locations) > 0:
             return self.enemy_predators_relative_locations[0]
         else:
             return RelativeLocation(1, 1)
+
+    def angle_to_closest_enemy_predator(self) -> float:
+        return self.closest_enemy_predator().angle()
+
+    def distance_to_closest_enemy_predator(self) -> float:
+        return self.closest_enemy_predator().distance()
 
     def closest_ally_prey(self) -> RelativeLocation:
         if len(self.ally_prey_relative_locations) > 0:
@@ -159,11 +179,42 @@ class CompetitionTurtle:
         else:
             return RelativeLocation(1, 1)
 
+    def angle_to_closest_ally_prey(self) -> float:
+        return self.closest_ally_prey().angle()
+
+    def distance_to_closest_ally_prey(self) -> float:
+        return self.closest_ally_prey().distance()
+
     def closest_ally_predator(self) -> RelativeLocation:
         if len(self.ally_predators_relative_locations) > 0:
             return self.ally_predators_relative_locations[0]
         else:
             return RelativeLocation(1, 1)
 
+    def angle_to_closest_ally_predator(self) -> float:
+        return self.closest_ally_predator().angle()
 
+    def distance_to_closest_ally_predator(self) -> float:
+        return self.closest_ally_predator().distance()
 
+    def max_speed(self) -> float:
+        return self.__max_speed
+
+    def is_turtle_on_left_edge(self) -> bool:
+        return self.__is_turtle_on_left_edge(self)
+    def is_turtle_on_top_edge(self) -> bool:
+        return self.__is_turtle_on_top_edge(self)
+    def is_turtle_on_right_edge(self) -> bool:
+        return self.__is_turtle_on_right_edge(self)
+    def is_turtle_on_bottom_edge(self) -> bool:
+        return self.__is_turtle_on_bottom_edge(self)
+    def is_turtle_in_top_left_corner(self) -> bool:
+        return self.__is_turtle_in_top_left_corner(self)
+    def is_turtle_in_top_right_corner(self) -> bool:
+        return self.__is_turtle_in_top_right_corner(self)
+    def is_turtle_in_bottom_right_corner(self) -> bool:
+        return self.__is_turtle_in_bottom_right_corner(self)
+    def is_turtle_in_bottom_left_corner(self) -> bool:
+        return self.__is_turtle_in_bottom_left_corner(self)
+    def heading(self) -> float:
+        return self.__turtle.heading()
