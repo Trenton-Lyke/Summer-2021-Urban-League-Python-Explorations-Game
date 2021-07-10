@@ -13,7 +13,7 @@ from turtle_game.relative_location import RelativeLocation
 
 
 class CompetitionTurtle:
-    def __init__(self, team_name: str, is_prey: bool, color: Union[str,Tuple[float,float,float]], x: float, y: float, move_barrier: Barrier, check_barrier: Barrier,  process_queue: Queue, lock: Lock, __can_goto: Callable[[CompetitionTurtle],bool], __can_eat: Callable[[CompetitionTurtle,CompetitionTurtle],bool],  is_game_over: Callable[[],bool], is_turtle_on_left_edge: Callable[[CompetitionTurtle],bool], is_turtle_on_top_edge: Callable[[CompetitionTurtle],bool], is_turtle_on_right_edge: Callable[[CompetitionTurtle],bool], is_turtle_on_bottom_edge: Callable[[CompetitionTurtle],bool], is_turtle_in_top_left_corner: Callable[[CompetitionTurtle],bool], is_turtle_in_top_right_corner: Callable[[CompetitionTurtle],bool], is_turtle_in_bottom_right_corner: Callable[[CompetitionTurtle],bool], is_turtle_in_bottom_left_corner: Callable[[CompetitionTurtle],bool],max_speed: float):
+    def __init__(self, team_name: str, is_prey: bool, color: Union[str,Tuple[float,float,float]], x: float, y: float, move_barrier: Barrier, check_barrier: Barrier, process_queue: Queue, lock: Lock, can_move_without_wait: Callable[[CompetitionTurtle], bool], can_eat: Callable[[CompetitionTurtle, CompetitionTurtle], bool], is_game_over: Callable[[], bool], is_turtle_on_left_edge: Callable[[CompetitionTurtle], bool], is_turtle_on_top_edge: Callable[[CompetitionTurtle], bool], is_turtle_on_right_edge: Callable[[CompetitionTurtle], bool], is_turtle_on_bottom_edge: Callable[[CompetitionTurtle], bool], is_turtle_in_top_left_corner: Callable[[CompetitionTurtle], bool], is_turtle_in_top_right_corner: Callable[[CompetitionTurtle], bool], is_turtle_in_bottom_right_corner: Callable[[CompetitionTurtle], bool], is_turtle_in_bottom_left_corner: Callable[[CompetitionTurtle], bool], max_speed: float):
         self.__turtle: Turtle = Turtle()
         self.__turtle.shape('turtle')
         self.__team_name: str = team_name
@@ -32,8 +32,8 @@ class CompetitionTurtle:
         self.ally_prey_relative_locations: List[RelativeLocation] = []
         self.__energy: int = 5
         self.__started: bool = False
-        self.__can_goto: Callable[[CompetitionTurtle],bool] = __can_goto
-        self.__can_eat: Callable[[CompetitionTurtle, CompetitionTurtle], bool] = __can_eat
+        self.__can_move_without_wait: Callable[[CompetitionTurtle], bool] = can_move_without_wait
+        self.__can_eat: Callable[[CompetitionTurtle, CompetitionTurtle], bool] = can_eat
         self.__waited = False
         self.__just_ate = False
         self.goto(x, y)
@@ -117,11 +117,16 @@ class CompetitionTurtle:
         return self.__turtle.position()
 
     def goto(self, x: float, y: float, ):
-        if self.__can_goto(self):
+        if self.__can_move_without_wait(self):
             self.__turtle.goto(x,y)
         else:
             self.wait()
 
+    def force_heading(self, angle: float):
+        if self.__can_move_without_wait(self):
+            self.__turtle.setheading(angle)
+        else:
+            self.wait()
     def hide(self):
         self.__turtle.hideturtle()
 
@@ -196,6 +201,18 @@ class CompetitionTurtle:
 
     def distance_to_closest_ally_predator(self) -> float:
         return self.closest_ally_predator().distance()
+
+    def turn_to_closest_enemy_prey(self):
+        self.setheading(self.angle_to_closest_enemy_prey())
+
+    def turn_to_closest_enemy_predator(self):
+        self.setheading(self.angle_to_closest_enemy_predator())
+
+    def turn_to_closest_ally_prey(self):
+        self.setheading(self.angle_to_closest_ally_prey())
+
+    def turn_to_closest_ally_predator(self):
+        self.setheading(self.angle_to_closest_ally_predator())
 
     def max_speed(self) -> float:
         return self.__max_speed

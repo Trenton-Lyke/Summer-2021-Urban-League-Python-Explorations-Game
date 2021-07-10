@@ -42,7 +42,7 @@ class Engine:
                 location = player.prey_placement_function(self.world, i)
                 location = self.location_failsafe(location, True)
                 turtle = CompetitionTurtle(player.team_name, True, player.prey_color, location[0], location[1],
-                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_goto, self.can_eat, self.game_over, self.is_turtle_on_left_edge, self.is_turtle_on_top_edge, self.is_turtle_on_right_edge, self.is_turtle_on_bottom_edge, self.is_turtle_in_top_left_corner, self.is_turtle_in_top_right_corner, self.is_turtle_in_bottom_right_corner, self.is_turtle_in_bottom_left_corner,9)
+                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_move_without_wait, self.can_eat, self.game_over, self.is_turtle_on_left_edge, self.is_turtle_on_top_edge, self.is_turtle_on_right_edge, self.is_turtle_on_bottom_edge, self.is_turtle_in_top_left_corner, self.is_turtle_in_top_right_corner, self.is_turtle_in_bottom_right_corner, self.is_turtle_in_bottom_left_corner, 9)
                 self.world.turtles.append(turtle)
                 self.world.prey.append(turtle)
 
@@ -50,7 +50,7 @@ class Engine:
                 location = player.predator_placement_function(self.world, i)
                 location = self.location_failsafe(location, False)
                 turtle = CompetitionTurtle(player.team_name, False, player.predator_color, location[0], location[1],
-                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_goto, self.can_eat, self.game_over, self.is_turtle_on_left_edge, self.is_turtle_on_top_edge, self.is_turtle_on_right_edge, self.is_turtle_on_bottom_edge, self.is_turtle_in_top_left_corner, self.is_turtle_in_top_right_corner, self.is_turtle_in_bottom_right_corner, self.is_turtle_in_bottom_left_corner,12)
+                                           self.move_barrier, self.check_barrier, self.process_queue, self.game_lock, self.can_move_without_wait, self.can_eat, self.game_over, self.is_turtle_on_left_edge, self.is_turtle_on_top_edge, self.is_turtle_on_right_edge, self.is_turtle_on_bottom_edge, self.is_turtle_in_top_left_corner, self.is_turtle_in_top_right_corner, self.is_turtle_in_bottom_right_corner, self.is_turtle_in_bottom_left_corner, 12)
                 self.world.turtles.append(turtle)
                 self.world.predators.append(turtle)
 
@@ -67,7 +67,7 @@ class Engine:
         return location
 
 
-    def can_goto(self, turtle: CompetitionTurtle):
+    def can_move_without_wait(self, turtle: CompetitionTurtle):
         return not self.__start or not self.world.is_in_bounds(turtle)
     def can_eat(self, predator: CompetitionTurtle, prey: CompetitionTurtle):
         return not predator.is_prey() and prey.is_prey() and predator.distance(prey) < self.predator_kill_radius
@@ -126,15 +126,19 @@ class Engine:
         y = turtle.position()[1]
         stayed = True
         if x > self.world.world_dimensions.max_x():
+            turtle.force_heading(360-turtle.heading())
             turtle.goto(self.world.world_dimensions.max_x(), y)
             stayed = False
         elif x < self.world.world_dimensions.min_x():
+            turtle.force_heading(360 - turtle.heading())
             turtle.goto(self.world.world_dimensions.min_x(), y)
             stayed = False
         if y > self.world.world_dimensions.max_y():
+            turtle.force_heading(360 - turtle.heading())
             turtle.goto(x, self.world.world_dimensions.max_y())
             stayed = False
         elif y < self.world.world_dimensions.min_y():
+            turtle.force_heading(360 - turtle.heading())
             turtle.goto(x, self.world.world_dimensions.min_y())
             stayed = False
         return stayed

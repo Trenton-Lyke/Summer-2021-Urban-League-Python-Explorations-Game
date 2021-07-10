@@ -42,8 +42,8 @@ def prey_movement_function(turtle: CompetitionTurtle, world):
             turtle.setheading(angle + change)
             turtle.forward(turtle.energy_level() // 2)
 
-def predator_movement_function(turtle, world):
-    turtle.setheading(turtle.closest_enemy_prey().angle())
+def predator_movement_function(turtle: CompetitionTurtle, world):
+    turtle.turn_to_closest_enemy_prey()
     turtle.forward(turtle.energy_level() / 2)
 
 
