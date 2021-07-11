@@ -36,6 +36,7 @@ class CompetitionTurtle:
         self.__can_eat: Callable[[CompetitionTurtle, CompetitionTurtle], bool] = can_eat
         self.__waited = False
         self.__just_ate = False
+        self.__is_alive = True
         self.goto(x, y)
         self.__max_speed: float = max_speed
         self.__is_game_over: Callable[[],bool] = is_game_over
@@ -61,9 +62,10 @@ class CompetitionTurtle:
 
 
     def __add_to_queue(self, function: Callable[[float],None], value: float):
-        self.__lock.acquire()
-        self.__process_queue.put(Command(function, value))
-        self.__lock.release()
+        if self.__is_alive:
+            self.__lock.acquire()
+            self.__process_queue.put(Command(function, value))
+            self.__lock.release()
 
     def wait(self, bonus=True):
         if bonus:
@@ -84,33 +86,38 @@ class CompetitionTurtle:
     def did_wait(self):
         return self.__waited
     def forward(self, speed: float):
-        speed = min(speed, self.__energy, self.__max_speed)
-        self.__energy -= speed
-        self.__add_to_queue(self.__turtle.forward,speed)
+        if self.__is_alive:
+            speed = min(speed, self.__energy, self.__max_speed)
+            self.__energy -= speed
+            self.__add_to_queue(self.__turtle.forward,speed)
         self.wait(False)
 
     def backward(self, speed: float):
-        speed = min(speed, self.__energy, self.__max_speed)
-        self.__energy -= speed
-        self.__add_to_queue(self.__turtle.backward,speed)
+        if self.__is_alive:
+            speed = min(speed, self.__energy, self.__max_speed)
+            self.__energy -= speed
+            self.__add_to_queue(self.__turtle.backward,speed)
         self.wait(False)
 
     def right(self, value: float):
-        if self.__energy >= 1:
-            self.__energy -= 1
-            self.__add_to_queue(self.__turtle.right,value)
+        if self.__is_alive:
+            if self.__energy >= 1:
+                self.__energy -= 1
+                self.__add_to_queue(self.__turtle.right,value)
         self.wait(False)
 
     def left(self, value: float):
-        if self.__energy >= 1:
-            self.__energy -= 1
-            self.__add_to_queue(self.__turtle.left,value)
+        if self.__is_alive:
+            if self.__energy >= 1:
+                self.__energy -= 1
+                self.__add_to_queue(self.__turtle.left,value)
         self.wait(False)
 
     def setheading(self, value: float):
-        if self.__energy >= 1:
-            self.__energy -= 1
-            self.__add_to_queue(self.__turtle.setheading,value%360)
+        if self.__is_alive:
+            if self.__energy >= 1:
+                self.__energy -= 1
+                self.__add_to_queue(self.__turtle.setheading,value%360)
         self.wait(False)
 
     def position(self)->(float,float):
@@ -118,17 +125,24 @@ class CompetitionTurtle:
 
     def goto(self, x: float, y: float, ):
         if self.__can_move_without_wait(self):
-            self.__turtle.goto(x,y)
+            try:
+                self.__turtle.goto(x,y)
+            except:
+                pass
         else:
             self.wait()
 
     def force_heading(self, angle: float):
         if self.__can_move_without_wait(self):
-            self.__turtle.setheading(angle)
+            try:
+                self.__turtle.setheading(angle)
+            except:
+                pass
         else:
             self.wait()
     def hide(self):
         self.__turtle.hideturtle()
+        self.__is_alive = False
 
     def eat(self, prey: CompetitionTurtle):
         if self.__can_eat(self,prey):
@@ -213,6 +227,18 @@ class CompetitionTurtle:
 
     def turn_to_closest_ally_predator(self):
         self.setheading(self.angle_to_closest_ally_predator())
+
+    def turn_away_from_closest_enemy_prey(self):
+        self.setheading(self.angle_to_closest_enemy_prey()+180)
+
+    def turn_away_from_enemy_predator(self):
+        self.setheading(self.angle_to_closest_enemy_predator()+180)
+
+    def turn_away_from_closest_ally_prey(self):
+        self.setheading(self.angle_to_closest_ally_prey()+180)
+
+    def turn_away_from_closest_ally_predator(self):
+        self.setheading(self.angle_to_closest_ally_predator()+180)
 
     def max_speed(self) -> float:
         return self.__max_speed
