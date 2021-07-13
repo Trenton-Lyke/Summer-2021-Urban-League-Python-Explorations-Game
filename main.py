@@ -25,17 +25,8 @@ def default_placement_function(world: World, prey_number: int) -> Tuple[float, f
     return world.random_location()
 
 def default_movement_function(turtle: CompetitionTurtle, world: World):
-    num = randint(0,4)
-    if num == 0:
-        turtle.right(30)
-    elif num == 1:
-        turtle.left(30)
-    elif num == 2:
-        turtle.forward(3)
-    elif num == 3:
-        turtle.backward(3)
-    else:
-        turtle.wait()
+    turtle.forward(turtle.energy_level())
+
 
 def test_function(function, *arguments):
     try:
@@ -99,7 +90,7 @@ def failsafes(person):
     test_turtle = CompetitionTurtle(team_name, True, prey_color, World().random_location()[0], World().random_location()[1],
                                     Barrier(1), Barrier(1), Queue(), Lock(), can_goto, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, 12)
     test_turtle.hide()
-    if not hasattr(person,"prey_movement_function") or not isinstance(person.prey_movement_function,Callable) or not test_function_time(5, person.prey_movement_function, test_turtle, World()):
+    if not hasattr(person,"prey_movement_function") or not isinstance(person.prey_movement_function,Callable):
         print("Prey movement function failsafe 1 triggered")
         prey_movement_function = default_movement_function
     else:
@@ -108,7 +99,7 @@ def failsafes(person):
                                     World().random_location()[1],
                                     Barrier(1), Barrier(1), Queue(), Lock(), can_goto, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, get_bool, 9)
     test_turtle.hide()
-    if not hasattr(person,"predator_movement_function") or not isinstance(person.predator_movement_function,Callable) or not test_function_time(5, person.predator_movement_function, test_turtle, World()):
+    if not hasattr(person,"predator_movement_function") or not isinstance(person.predator_movement_function,Callable):
         print("Predator movement function failsafe 1 triggered")
         predator_movement_function = default_movement_function
     else:

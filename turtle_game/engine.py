@@ -1,7 +1,7 @@
 from math import sqrt, degrees, atan2
 from queue import Queue
 from random import random
-from threading import Barrier, Lock, Thread
+from threading import Barrier, Lock, Thread, Event
 from typing import Tuple, List, Callable, Dict
 from turtle import tracer, update
 
@@ -20,7 +20,8 @@ from turtle_game.world import World
 
 
 class Engine:
-    def __init__(self, world: World, players: List[Player], prey_per_team:int=125, predators_per_team:int=25, border_proximity=10):
+    def __init__(self, world: World, players: List[Player], prey_per_team:int=125, predators_per_team:int=25, border_proximity:float=10, safe_mode: bool=False):
+        self.safe_mode = safe_mode
         self.world: World = world
         self.predator_kill_radius: int = world.predator_kill_radius()
         self.players: List[Player] = players
@@ -126,11 +127,11 @@ class Engine:
         y = turtle.position()[1]
         stayed = True
         if x > self.world.world_dimensions.max_x():
-            turtle.force_heading(360-turtle.heading())
+            turtle.force_heading(360-(turtle.heading()+180))
             turtle.goto(self.world.world_dimensions.max_x(), y)
             stayed = False
         elif x < self.world.world_dimensions.min_x():
-            turtle.force_heading(360 - turtle.heading())
+            turtle.force_heading(360-(turtle.heading()+180))
             turtle.goto(self.world.world_dimensions.min_x(), y)
             stayed = False
         if y > self.world.world_dimensions.max_y():
@@ -174,18 +175,24 @@ class Engine:
                 return player
 
     def turtle_thread_function(self, function: Callable[[CompetitionTurtle, World], None], turtle: CompetitionTurtle):
+
         invalid_function: bool = False
         while not self.game_over():
             if not invalid_function:
                 turtle.reset_wait()
                 try:
-                    test_thred = StoppableThread(target=function,args=(turtle, self.world,))
-                    test_thred.start()
-                    test_thred.join(3)
-                    if test_thred.is_alive():
-                        turtle.wait()
-                        test_thred.stop()
-                        invalid_function = True
+                    if self.safe_mode:
+                        test_thred = StoppableThread(target=function,args=(turtle, self.world,))
+                        test_thred.start()
+
+                        while test_thred.is_alive():
+                            Event().wait(timeout=.25)
+                            if not turtle.did_wait():
+                                turtle.wait()
+                                test_thred.stop()
+                                invalid_function = True
+                    else:
+                        function(turtle, self.world)
                 except Exception as e:
                     print(e)
                     turtle.wait()
