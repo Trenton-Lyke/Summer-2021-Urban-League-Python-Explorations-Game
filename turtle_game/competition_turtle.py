@@ -19,7 +19,11 @@ class CompetitionTurtle:
         self.__turtle.shape('turtle')
         self.__team_name: str = team_name
         self.__turtle.speed("fastest")
-        self.__turtle.color(color)
+        try:
+            self.__turtle.color(color)
+        except:
+            self.__turtle.color("blue")
+            print("Color fail safe activated")
         self.__is_prey: bool = is_prey
         self.__turtle.shapesize(1 if self.__is_prey else 2)
         self.__turtle.penup()
