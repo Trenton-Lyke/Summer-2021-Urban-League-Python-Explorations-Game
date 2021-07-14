@@ -15,15 +15,15 @@ def randAdd():
         num = randint(1, 3)
 
         if num == 1:
-            val = randint(0, len(alphabet))
-            toReturn += alphabet[val:randint(val, len(alphabet))]
+            val = randint(0, len(alphabet)-1)
+            toReturn += alphabet[val:randint(val, len(alphabet)-1)]
         elif num == 2:
             toReturn = toReturn + str(randint(0, 9))
         elif not has_dot:
             if randint(0,1) == 0:
                 toReturn = toReturn + "." +str(randint(0, 9))
             else:
-                toReturn = toReturn + "." + alphabet[randint(0, len(alphabet))]
+                toReturn = toReturn + "." + alphabet[randint(0, len(alphabet)-1)]
             has_dot = True
     return toReturn
 def randPass(minLen):
@@ -31,8 +31,8 @@ def randPass(minLen):
     while len(toReturn) < minLen:
         num = randint(0,3)
         if num < 2:
-            val = randint(0, len(alphabet))
-            toReturn += alphabet[val:randint(val, len(alphabet))]
+            val = randint(0, len(alphabet)-1)
+            toReturn += alphabet[val:randint(val, len(alphabet)-1)]
         elif num == 2:
             toReturn += randAdd()
         else:
